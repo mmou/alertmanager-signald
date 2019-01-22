@@ -10,6 +10,7 @@ require (
 	github.com/hashicorp/go-multierror v1.0.0 // indirect
 	github.com/hashicorp/go-sockaddr v0.0.0-20190103214136-e92cdb5343bb // indirect
 	github.com/hashicorp/memberlist v0.1.0 // indirect
+	github.com/kr/pretty v0.1.0
 	github.com/miekg/dns v1.1.2 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c // indirect

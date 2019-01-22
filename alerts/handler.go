@@ -8,7 +8,9 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strings"
 
+	"github.com/kr/pretty"
 	"github.com/prometheus/alertmanager/notify"
 )
 
@@ -48,7 +50,6 @@ func Handler(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "Failed to parse alert", http.StatusBadRequest)
 		return
 	}
-	// log.Print(pretty.Sprint(msg))
 
 	// Handle the webhook message.
 	if err := processAlert(msg); err != nil {
@@ -63,15 +64,24 @@ func Handler(w http.ResponseWriter, req *http.Request) {
 }
 
 func processAlert(msg *notify.WebhookMessage) error {
+	log.Print("Processing alert: ", pretty.Sprint(msg))
 	conn, err := net.Dial("tcp", signaldAddr)
 	req := SignalRequest{"send", senderNumber, formatAlert(msg), receiverGroupId}
 	b, err := json.Marshal(req)
-	log.Print("Sending ", string(b))
+	log.Print("Sending alert: ", string(b))
 	e := json.NewEncoder(conn)
 	e.Encode(req)
 	return err
 }
 
 func formatAlert(msg *notify.WebhookMessage) string {
-	return fmt.Sprintf("%s: %s", msg.Data.GroupLabels["alertname"], msg.Data.ExternalURL)
+	msgs := []string{}
+	for i, alert := range msg.Alerts {
+		data := pretty.Sprint(alert.Annotations)
+		if desc, ok := alert.Annotations["description"]; ok {
+			data = desc
+		}
+		msgs = append(msgs, fmt.Sprintf("[%s %d/%d] %s", msg.Status, i+1, len(msg.Alerts), data))
+	}
+	return fmt.Sprintf(strings.Join(msgs, "\n"))
 }
